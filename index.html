@@ -311,9 +311,6 @@
   <div class="section-title">סיכום תקופה נבחרת <span id="period-range" style="font-size:13px;color:var(--muted);font-weight:400;margin-right:8px;"></span></div>
   <div class="cards" id="totals-cards"></div>
 
-  <div class="section-title">KPIs מרכזיים (חודש אחרון)</div>
-  <div class="cards" id="overview-cards"></div>
-
   <div class="section-title">מגמות חודש מול חודש</div>
   <div class="grid">
     <div class="chart-box">
@@ -620,15 +617,24 @@ function renderTotals(tm, fb, ig, tt) {
   const fbViews = sum(fb, 'views');
   const igViews = sum(ig, 'views');
   const ttViews = sum(tt, 'video_views');
-  const totalInteractions = sum(fb, 'content_interactions') + sum(ig, 'content_interactions') + sum(tt, 'likes') + sum(tt, 'comments');
+  const fbInt = sum(fb, 'content_interactions');
+  const igInt = sum(ig, 'content_interactions');
+  const ttInt = sum(tt, 'likes') + sum(tt, 'comments');
 
-  card(totalsEl, 'סה"כ עיסקאות', fmtCurrency(totalDeals), null, 'tm');
-  card(totalsEl, 'סה"כ סליקות', fmtCurrency(totalBillings), null, 'tm');
+  // Telemarketing totals
+  card(totalsEl, 'סה"כ עיסקאות מוקד', fmtCurrency(totalDeals), null, 'tm');
+  card(totalsEl, 'סה"כ סליקות מוקד', fmtCurrency(totalBillings), null, 'tm');
   card(totalsEl, 'סה"כ הוצאות מוקד', fmtCurrency(totalExpenses), null, 'tm');
   card(totalsEl, 'סה"כ עמלות פרנדוס', fmtCurrency(totalCommission), null, 'tm');
   card(totalsEl, 'סה"כ הכנסות קמפיינים', fmtCurrency(totalCampaign), null, 'tm');
-  card(totalsEl, 'סה"כ Views (סושיאל)', fmt(fbViews + igViews + ttViews), null, 'fb');
-  card(totalsEl, 'סה"כ אינטראקציות', fmt(totalInteractions), null, 'ig');
+
+  // Social — split per network
+  card(totalsEl, 'Facebook — Views', fmt(fbViews), null, 'fb');
+  card(totalsEl, 'Facebook — אינטראקציות', fmt(fbInt), null, 'fb');
+  card(totalsEl, 'Instagram — Views', fmt(igViews), null, 'ig');
+  card(totalsEl, 'Instagram — אינטראקציות', fmt(igInt), null, 'ig');
+  card(totalsEl, 'TikTok — Video Views', fmt(ttViews), null, 'tt');
+  card(totalsEl, 'TikTok — Likes+Comments', fmt(ttInt), null, 'tt');
 }
 
 function renderOverview() {
@@ -637,21 +643,6 @@ function renderOverview() {
   const ig = filterSocial('instagram');
   const tt = filterSocial('tiktok');
   renderTotals(tm, fb, ig, tt);
-  const last = tm[tm.length - 1];
-  const prev = tm[tm.length - 2];
-  const fbLast = fb[fb.length - 1], fbPrev = fb[fb.length - 2];
-  const igLast = ig[ig.length - 1], igPrev = ig[ig.length - 2];
-  const ttLast = tt[tt.length - 1], ttPrev = tt[tt.length - 2];
-
-  const cards = document.getElementById('overview-cards');
-  cards.innerHTML = '';
-  card(cards, 'עיסקאות מוקד', fmtCurrency(last.deals), delta(last.deals, prev?.deals), 'tm');
-  card(cards, 'סליקות מוקד', fmtCurrency(last.billings), delta(last.billings, prev?.billings), 'tm');
-  card(cards, 'עמלת פרנדוס', fmtCurrency(last.prandos_commission), delta(last.prandos_commission, prev?.prandos_commission), 'tm');
-  card(cards, 'FB Views', fmt(fbLast.views), delta(fbLast.views, fbPrev?.views), 'fb');
-  card(cards, 'IG Views', fmt(igLast.views), delta(igLast.views, igPrev?.views), 'ig');
-  card(cards, 'TT Video Views', fmt(ttLast.video_views), delta(ttLast.video_views, ttPrev?.video_views), 'tt');
-
   // TM chart
   getChart('chart-tm-overview', {
     type: 'bar',
