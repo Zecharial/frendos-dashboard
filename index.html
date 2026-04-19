@@ -215,6 +215,50 @@
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
+  /* Month filter */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+  }
+  .filter-bar .filter-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .chip:hover { color: var(--text); border-color: var(--accent); }
+  .chip.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .filter-bar .sep { flex: 1; }
+  .chip.mini {
+    padding: 5px 10px;
+    font-size: 12px;
+    background: var(--panel-2);
+  }
+  .chip.mini:hover { background: var(--border); }
+
   @media (max-width: 768px) {
     .grid { grid-template-columns: 1fr; }
     h1 { font-size: 20px; }
@@ -251,6 +295,15 @@
     <span class="updated" id="updated"></span>
   </div>
 </header>
+
+<!-- Month Filter (applies to ALL tabs) -->
+<div class="filter-bar">
+  <span class="filter-label">סנן לפי חודשים:</span>
+  <div id="month-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+  <span class="sep"></span>
+  <button class="chip mini" id="btn-all-months">הצג הכל</button>
+  <button class="chip mini" id="btn-last-3">3 אחרונים</button>
+</div>
 
 <!-- OVERVIEW TAB -->
 <div class="tab-content active" data-tab="overview">
@@ -446,6 +499,22 @@ Chart.defaults.plugins.tooltip.padding = 10;
 Chart.defaults.plugins.tooltip.cornerRadius = 8;
 
 // ============================================================
+// STATE — which months are selected (Set of month_keys)
+// ============================================================
+const ALL_MONTH_KEYS = DATA.telemarketing.map(r => r.month_key);
+const state = { selectedMonths: new Set(ALL_MONTH_KEYS) };
+const charts = {};  // keyed by canvas id, so we can destroy before recreating
+
+function getChart(id, config) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(id, config);
+  return charts[id];
+}
+
+function filterTM() { return DATA.telemarketing.filter(r => state.selectedMonths.has(r.month_key)); }
+function filterSocial(series) { return DATA[series].filter(r => state.selectedMonths.has(r.month_key)); }
+
+// ============================================================
 // UTILS
 // ============================================================
 const fmt = (n) => {
@@ -478,10 +547,10 @@ function card(parent, label, value, deltaObj, klass = '') {
 }
 
 function labels() {
-  return DATA.telemarketing.map(r => r.month_label);
+  return filterTM().map(r => r.month_label);
 }
 function social_labels(series) {
-  return DATA[series].map(r => r.month_label);
+  return filterSocial(series).map(r => r.month_label);
 }
 
 const LINE_OPTS = {
@@ -507,10 +576,10 @@ const BAR_OPTS = {
 // RENDER OVERVIEW
 // ============================================================
 function renderOverview() {
-  const tm = DATA.telemarketing;
-  const fb = DATA.facebook;
-  const ig = DATA.instagram;
-  const tt = DATA.tiktok;
+  const tm = filterTM();
+  const fb = filterSocial('facebook');
+  const ig = filterSocial('instagram');
+  const tt = filterSocial('tiktok');
   const last = tm[tm.length - 1];
   const prev = tm[tm.length - 2];
   const fbLast = fb[fb.length - 1], fbPrev = fb[fb.length - 2];
@@ -519,15 +588,15 @@ function renderOverview() {
 
   const cards = document.getElementById('overview-cards');
   cards.innerHTML = '';
-  card(cards, 'עיסקאות מוקד', fmtCurrency(last.deals), delta(last.deals, prev.deals), 'tm');
-  card(cards, 'סליקות מוקד', fmtCurrency(last.billings), delta(last.billings, prev.billings), 'tm');
-  card(cards, 'עמלת פרנדוס', fmtCurrency(last.prandos_commission), delta(last.prandos_commission, prev.prandos_commission), 'tm');
-  card(cards, 'FB Views', fmt(fbLast.views), delta(fbLast.views, fbPrev.views), 'fb');
-  card(cards, 'IG Views', fmt(igLast.views), delta(igLast.views, igPrev.views), 'ig');
-  card(cards, 'TT Video Views', fmt(ttLast.video_views), delta(ttLast.video_views, ttPrev.video_views), 'tt');
+  card(cards, 'עיסקאות מוקד', fmtCurrency(last.deals), delta(last.deals, prev?.deals), 'tm');
+  card(cards, 'סליקות מוקד', fmtCurrency(last.billings), delta(last.billings, prev?.billings), 'tm');
+  card(cards, 'עמלת פרנדוס', fmtCurrency(last.prandos_commission), delta(last.prandos_commission, prev?.prandos_commission), 'tm');
+  card(cards, 'FB Views', fmt(fbLast.views), delta(fbLast.views, fbPrev?.views), 'fb');
+  card(cards, 'IG Views', fmt(igLast.views), delta(igLast.views, igPrev?.views), 'ig');
+  card(cards, 'TT Video Views', fmt(ttLast.video_views), delta(ttLast.video_views, ttPrev?.video_views), 'tt');
 
   // TM chart
-  new Chart('chart-tm-overview', {
+  getChart('chart-tm-overview', {
     type: 'bar',
     data: {
       labels: labels(),
@@ -540,7 +609,7 @@ function renderOverview() {
   });
 
   // Social views total
-  new Chart('chart-social-views', {
+  getChart('chart-social-views', {
     type: 'line',
     data: {
       labels: social_labels('facebook'),
@@ -554,7 +623,7 @@ function renderOverview() {
   });
 
   // Commission
-  new Chart('chart-commission', {
+  getChart('chart-commission', {
     type: 'bar',
     data: {
       labels: labels(),
@@ -564,7 +633,7 @@ function renderOverview() {
   });
 
   // Interactions
-  new Chart('chart-interactions', {
+  getChart('chart-interactions', {
     type: 'bar',
     data: {
       labels: social_labels('facebook'),
@@ -602,19 +671,19 @@ function renderOverview() {
 // RENDER TELEMARKETING
 // ============================================================
 function renderTelemarketing() {
-  const tm = DATA.telemarketing;
+  const tm = filterTM();
   const last = tm[tm.length - 1];
   const prev = tm[tm.length - 2];
   const cards = document.getElementById('tm-cards');
   cards.innerHTML = '';
-  card(cards, 'עיסקאות', fmtCurrency(last.deals), delta(last.deals, prev.deals), 'tm');
-  card(cards, 'סליקות', fmtCurrency(last.billings), delta(last.billings, prev.billings), 'tm');
-  card(cards, 'יעד', fmtPct(last.target_pct), delta(last.target_pct, prev.target_pct), 'tm');
-  card(cards, 'הוצאות מוקד', fmtCurrency(last.total_expenses), delta(last.total_expenses, prev.total_expenses), 'tm');
-  card(cards, 'עמלות לנציגים', fmtCurrency(last.commissions), delta(last.commissions, prev.commissions), 'tm');
-  card(cards, 'עמלת פרנדוס', fmtCurrency(last.prandos_commission), delta(last.prandos_commission, prev.prandos_commission), 'tm');
+  card(cards, 'עיסקאות', fmtCurrency(last.deals), delta(last.deals, prev?.deals), 'tm');
+  card(cards, 'סליקות', fmtCurrency(last.billings), delta(last.billings, prev?.billings), 'tm');
+  card(cards, 'יעד', fmtPct(last.target_pct), delta(last.target_pct, prev?.target_pct), 'tm');
+  card(cards, 'הוצאות מוקד', fmtCurrency(last.total_expenses), delta(last.total_expenses, prev?.total_expenses), 'tm');
+  card(cards, 'עמלות לנציגים', fmtCurrency(last.commissions), delta(last.commissions, prev?.commissions), 'tm');
+  card(cards, 'עמלת פרנדוס', fmtCurrency(last.prandos_commission), delta(last.prandos_commission, prev?.prandos_commission), 'tm');
 
-  new Chart('chart-tm-deals', {
+  getChart('chart-tm-deals', {
     type: 'bar',
     data: {
       labels: labels(),
@@ -625,7 +694,7 @@ function renderTelemarketing() {
     }, options: BAR_OPTS
   });
 
-  new Chart('chart-tm-costs', {
+  getChart('chart-tm-costs', {
     type: 'bar',
     data: {
       labels: labels(),
@@ -636,7 +705,7 @@ function renderTelemarketing() {
     }, options: BAR_OPTS
   });
 
-  new Chart('chart-tm-hours', {
+  getChart('chart-tm-hours', {
     type: 'bar',
     data: {
       labels: labels(),
@@ -647,7 +716,7 @@ function renderTelemarketing() {
     }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' } }, x: { stacked: true, grid: { display: false } } } }
   });
 
-  new Chart('chart-tm-commission', {
+  getChart('chart-tm-commission', {
     type: 'line',
     data: {
       labels: labels(),
@@ -686,18 +755,18 @@ function renderTelemarketing() {
 // RENDER FACEBOOK
 // ============================================================
 function renderFacebook() {
-  const fb = DATA.facebook;
+  const fb = filterSocial('facebook');
   const last = fb[fb.length - 1], prev = fb[fb.length - 2];
   const cards = document.getElementById('fb-cards');
   cards.innerHTML = '';
-  card(cards, 'Views', fmt(last.views), delta(last.views, prev.views), 'fb');
-  card(cards, 'Content Interactions', fmt(last.content_interactions), delta(last.content_interactions, prev.content_interactions), 'fb');
-  card(cards, 'Visits', fmt(last.visits), delta(last.visits, prev.visits), 'fb');
-  card(cards, 'עוקבים חדשים', fmt(last.new_follows), delta(last.new_follows, prev.new_follows), 'fb');
-  card(cards, 'סה"כ עוקבים', fmt(last.total_followers), delta(last.total_followers, prev.total_followers), 'fb');
-  card(cards, 'Viewers ייחודיים', fmt(last.viewers), delta(last.viewers, prev.viewers), 'fb');
+  card(cards, 'Views', fmt(last.views), delta(last.views, prev?.views), 'fb');
+  card(cards, 'Content Interactions', fmt(last.content_interactions), delta(last.content_interactions, prev?.content_interactions), 'fb');
+  card(cards, 'Visits', fmt(last.visits), delta(last.visits, prev?.visits), 'fb');
+  card(cards, 'עוקבים חדשים', fmt(last.new_follows), delta(last.new_follows, prev?.new_follows), 'fb');
+  card(cards, 'סה"כ עוקבים', fmt(last.total_followers), delta(last.total_followers, prev?.total_followers), 'fb');
+  card(cards, 'Viewers ייחודיים', fmt(last.viewers), delta(last.viewers, prev?.viewers), 'fb');
 
-  new Chart('chart-fb-organic-ads', {
+  getChart('chart-fb-organic-ads', {
     type: 'bar',
     data: {
       labels: social_labels('facebook'),
@@ -708,7 +777,7 @@ function renderFacebook() {
     }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
   });
 
-  new Chart('chart-fb-followers', {
+  getChart('chart-fb-followers', {
     type: 'line',
     data: {
       labels: social_labels('facebook'),
@@ -718,7 +787,7 @@ function renderFacebook() {
     }, options: LINE_OPTS
   });
 
-  new Chart('chart-fb-interactions', {
+  getChart('chart-fb-interactions', {
     type: 'bar',
     data: {
       labels: social_labels('facebook'),
@@ -726,7 +795,7 @@ function renderFacebook() {
     }, options: BAR_OPTS
   });
 
-  new Chart('chart-fb-visits', {
+  getChart('chart-fb-visits', {
     type: 'bar',
     data: {
       labels: social_labels('facebook'),
@@ -756,18 +825,18 @@ function renderFacebook() {
 // RENDER INSTAGRAM
 // ============================================================
 function renderInstagram() {
-  const ig = DATA.instagram;
+  const ig = filterSocial('instagram');
   const last = ig[ig.length - 1], prev = ig[ig.length - 2];
   const cards = document.getElementById('ig-cards');
   cards.innerHTML = '';
-  card(cards, 'Views', fmt(last.views), delta(last.views, prev.views), 'ig');
-  card(cards, 'Reach', fmt(last.reach), delta(last.reach, prev.reach), 'ig');
-  card(cards, 'Content Interactions', fmt(last.content_interactions), delta(last.content_interactions, prev.content_interactions), 'ig');
-  card(cards, 'עוקבים', fmt(last.followers), delta(last.followers, prev.followers), 'ig');
-  card(cards, 'גידול נטו', fmt(last.growth), delta(last.growth, prev.growth), 'ig');
-  card(cards, 'Accounts Reached', fmt(last.accounts_reached), delta(last.accounts_reached, prev.accounts_reached), 'ig');
+  card(cards, 'Views', fmt(last.views), delta(last.views, prev?.views), 'ig');
+  card(cards, 'Reach', fmt(last.reach), delta(last.reach, prev?.reach), 'ig');
+  card(cards, 'Content Interactions', fmt(last.content_interactions), delta(last.content_interactions, prev?.content_interactions), 'ig');
+  card(cards, 'עוקבים', fmt(last.followers), delta(last.followers, prev?.followers), 'ig');
+  card(cards, 'גידול נטו', fmt(last.growth), delta(last.growth, prev?.growth), 'ig');
+  card(cards, 'Accounts Reached', fmt(last.accounts_reached), delta(last.accounts_reached, prev?.accounts_reached), 'ig');
 
-  new Chart('chart-ig-organic-ads', {
+  getChart('chart-ig-organic-ads', {
     type: 'bar',
     data: {
       labels: social_labels('instagram'),
@@ -778,7 +847,7 @@ function renderInstagram() {
     }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
   });
 
-  new Chart('chart-ig-reach', {
+  getChart('chart-ig-reach', {
     type: 'bar',
     data: {
       labels: social_labels('instagram'),
@@ -789,7 +858,7 @@ function renderInstagram() {
     }, options: BAR_OPTS
   });
 
-  new Chart('chart-ig-follows', {
+  getChart('chart-ig-follows', {
     type: 'bar',
     data: {
       labels: social_labels('instagram'),
@@ -800,7 +869,7 @@ function renderInstagram() {
     }, options: BAR_OPTS
   });
 
-  new Chart('chart-ig-growth', {
+  getChart('chart-ig-growth', {
     type: 'line',
     data: {
       labels: social_labels('instagram'),
@@ -831,18 +900,18 @@ function renderInstagram() {
 // RENDER TIKTOK
 // ============================================================
 function renderTiktok() {
-  const tt = DATA.tiktok;
+  const tt = filterSocial('tiktok');
   const last = tt[tt.length - 1], prev = tt[tt.length - 2];
   const cards = document.getElementById('tt-cards');
   cards.innerHTML = '';
-  card(cards, 'Video Views', fmt(last.video_views), delta(last.video_views, prev.video_views), 'tt');
-  card(cards, 'Profile Views', fmt(last.profile_views), delta(last.profile_views, prev.profile_views), 'tt');
-  card(cards, 'Likes', fmt(last.likes), delta(last.likes, prev.likes), 'tt');
-  card(cards, 'Shares', fmt(last.shares), delta(last.shares, prev.shares), 'tt');
-  card(cards, 'גידול נטו', fmt(last.net_follows), delta(last.net_follows, prev.net_follows), 'tt');
-  card(cards, 'סה"כ עוקבים', fmt(last.total_followers), delta(last.total_followers, prev.total_followers), 'tt');
+  card(cards, 'Video Views', fmt(last.video_views), delta(last.video_views, prev?.video_views), 'tt');
+  card(cards, 'Profile Views', fmt(last.profile_views), delta(last.profile_views, prev?.profile_views), 'tt');
+  card(cards, 'Likes', fmt(last.likes), delta(last.likes, prev?.likes), 'tt');
+  card(cards, 'Shares', fmt(last.shares), delta(last.shares, prev?.shares), 'tt');
+  card(cards, 'גידול נטו', fmt(last.net_follows), delta(last.net_follows, prev?.net_follows), 'tt');
+  card(cards, 'סה"כ עוקבים', fmt(last.total_followers), delta(last.total_followers, prev?.total_followers), 'tt');
 
-  new Chart('chart-tt-views', {
+  getChart('chart-tt-views', {
     type: 'line',
     data: {
       labels: social_labels('tiktok'),
@@ -850,7 +919,7 @@ function renderTiktok() {
     }, options: LINE_OPTS
   });
 
-  new Chart('chart-tt-engagement', {
+  getChart('chart-tt-engagement', {
     type: 'bar',
     data: {
       labels: social_labels('tiktok'),
@@ -862,7 +931,7 @@ function renderTiktok() {
     }, options: BAR_OPTS
   });
 
-  new Chart('chart-tt-follows', {
+  getChart('chart-tt-follows', {
     type: 'bar',
     data: {
       labels: social_labels('tiktok'),
@@ -870,7 +939,7 @@ function renderTiktok() {
     }, options: BAR_OPTS
   });
 
-  new Chart('chart-tt-profile', {
+  getChart('chart-tt-profile', {
     type: 'bar',
     data: {
       labels: social_labels('tiktok'),
@@ -908,15 +977,58 @@ document.querySelectorAll('.tab').forEach(btn => {
 });
 
 // ============================================================
+// MONTH FILTER
+// ============================================================
+function renderMonthChips() {
+  const el = document.getElementById('month-chips');
+  el.innerHTML = '';
+  DATA.telemarketing.forEach(r => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (state.selectedMonths.has(r.month_key) ? ' active' : '');
+    b.textContent = r.month_label;
+    b.dataset.key = r.month_key;
+    b.addEventListener('click', () => {
+      if (state.selectedMonths.has(r.month_key)) {
+        if (state.selectedMonths.size <= 1) return; // never allow zero
+        state.selectedMonths.delete(r.month_key);
+      } else {
+        state.selectedMonths.add(r.month_key);
+      }
+      renderMonthChips();
+      renderAll();
+    });
+    el.appendChild(b);
+  });
+}
+document.getElementById('btn-all-months').addEventListener('click', () => {
+  state.selectedMonths = new Set(ALL_MONTH_KEYS);
+  renderMonthChips();
+  renderAll();
+});
+document.getElementById('btn-last-3').addEventListener('click', () => {
+  state.selectedMonths = new Set(ALL_MONTH_KEYS.slice(-3));
+  renderMonthChips();
+  renderAll();
+});
+
+// ============================================================
+// RENDER ALL
+// ============================================================
+function renderAll() {
+  try { renderOverview(); } catch(e) { console.warn('overview', e); }
+  try { renderTelemarketing(); } catch(e) { console.warn('tm', e); }
+  try { renderFacebook(); } catch(e) { console.warn('fb', e); }
+  try { renderInstagram(); } catch(e) { console.warn('ig', e); }
+  try { renderTiktok(); } catch(e) { console.warn('tt', e); }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 document.getElementById('updated').textContent = 'עדכון אחרון: ' + DATA.last_updated;
 document.getElementById('footer-date').textContent = DATA.last_updated;
-renderOverview();
-renderTelemarketing();
-renderFacebook();
-renderInstagram();
-renderTiktok();
+renderMonthChips();
+renderAll();
 </script>
 
 </body>
