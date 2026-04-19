@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דאשבורד פרנדוס + גדולים במדים</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0b1220;
+    --panel: #141c2f;
+    --panel-2: #1b2640;
+    --border: #223052;
+    --text: #e7ecf5;
+    --muted: #8ea0c2;
+    --accent: #4aa3ff;
+    --good: #3ddc97;
+    --warn: #ffb84a;
+    --bad: #ff5c7a;
+    --fb: #1877f2;
+    --ig: #e1306c;
+    --tt: #25f4ee;
+    --tm: #ffb84a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Heebo', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 { margin: 0; font-size: 24px; font-weight: 700; }
+  h1 small { display: block; font-size: 13px; color: var(--muted); font-weight: 400; margin-top: 4px; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--panel);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all .15s;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--accent); color: white; }
+  .updated {
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--panel);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  /* Scorecards */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 4px;
+    background: var(--accent);
+  }
+  .card.fb::before { background: var(--fb); }
+  .card.ig::before { background: var(--ig); }
+  .card.tt::before { background: var(--tt); }
+  .card.tm::before { background: var(--tm); }
+  .card .label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+  .card .value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -.5px;
+  }
+  .card .delta {
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .delta.up { color: var(--good); }
+  .delta.down { color: var(--bad); }
+  .delta.flat { color: var(--muted); }
+
+  /* Chart grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .grid.full { grid-template-columns: 1fr; }
+  .chart-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px 20px;
+  }
+  .chart-box h3 {
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-box h3 .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .chart-box .canvas-wrap {
+    position: relative;
+    height: 280px;
+  }
+
+  /* Table */
+  .table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .table-wrap h3 {
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
+  th {
+    text-align: right;
+    padding: 10px 12px;
+    background: var(--panel-2);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(74, 163, 255, .04); }
+  td.num { font-variant-numeric: tabular-nums; font-weight: 500; }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 32px 0 16px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  @media (max-width: 768px) {
+    .grid { grid-template-columns: 1fr; }
+    h1 { font-size: 20px; }
+    .card .value { font-size: 22px; }
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div>
+    <h1>דאשבורד פרנדוס + גדולים במדים
+      <small>סיכום חודשי — מוקד טלמרקטינג וסושיאל</small>
+    </h1>
+  </div>
+  <div class="controls">
+    <div class="tab-bar">
+      <button class="tab active" data-tab="overview">סקירה כללית</button>
+      <button class="tab" data-tab="telemarketing">מוקד</button>
+      <button class="tab" data-tab="facebook">Facebook</button>
+      <button class="tab" data-tab="instagram">Instagram</button>
+      <button class="tab" data-tab="tiktok">TikTok</button>
+    </div>
+    <span class="updated" id="updated"></span>
+  </div>
+</header>
+
+<!-- OVERVIEW TAB -->
+<div class="tab-content active" data-tab="overview">
+  <div class="section-title">KPIs מרכזיים (חודש אחרון)</div>
+  <div class="cards" id="overview-cards"></div>
+
+  <div class="section-title">מגמות חודש מול חודש</div>
+  <div class="grid">
+    <div class="chart-box">
+      <h3><span class="dot" style="background:var(--tm)"></span>מוקד — סליקות מול עיסקאות</h3>
+      <div class="canvas-wrap"><canvas id="chart-tm-overview"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3><span class="dot" style="background:var(--accent)"></span>סושיאל — סה"כ Views</h3>
+      <div class="canvas-wrap"><canvas id="chart-social-views"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3><span class="dot" style="background:var(--good)"></span>עמלת פרנדוס</h3>
+      <div class="canvas-wrap"><canvas id="chart-commission"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3><span class="dot" style="background:var(--warn)"></span>אינטראקציות תוכן</h3>
+      <div class="canvas-wrap"><canvas id="chart-interactions"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <h3>סיכום חודשי משוקלל</h3>
+    <table id="summary-table">
+      <thead>
+        <tr>
+          <th>חודש</th>
+          <th>עיסקאות</th>
+          <th>סליקות</th>
+          <th>הוצאות מוקד</th>
+          <th>עמלת פרנדוס</th>
+          <th>Views (סושיאל)</th>
+          <th>Followers (סה"כ)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TELEMARKETING TAB -->
+<div class="tab-content" data-tab="telemarketing">
+  <div class="section-title">מוקד פרנדוס — KPIs</div>
+  <div class="cards" id="tm-cards"></div>
+
+  <div class="grid">
+    <div class="chart-box">
+      <h3>עיסקאות מול סליקות</h3>
+      <div class="canvas-wrap"><canvas id="chart-tm-deals"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>הוצאות vs הכנסות מוקד</h3>
+      <div class="canvas-wrap"><canvas id="chart-tm-costs"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>שעות צוות (נציגים + מנהל)</h3>
+      <div class="canvas-wrap"><canvas id="chart-tm-hours"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>עמלת פרנדוס חודש מול חודש</h3>
+      <div class="canvas-wrap"><canvas id="chart-tm-commission"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <h3>נתוני מוקד מלאים</h3>
+    <table id="tm-table"><thead></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- FACEBOOK TAB -->
+<div class="tab-content" data-tab="facebook">
+  <div class="section-title">Facebook — KPIs</div>
+  <div class="cards" id="fb-cards"></div>
+
+  <div class="grid">
+    <div class="chart-box">
+      <h3>Views: אורגני מול ממומן</h3>
+      <div class="canvas-wrap"><canvas id="chart-fb-organic-ads"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>גידול עוקבים</h3>
+      <div class="canvas-wrap"><canvas id="chart-fb-followers"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>אינטראקציות תוכן</h3>
+      <div class="canvas-wrap"><canvas id="chart-fb-interactions"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>ביקורים בעמוד</h3>
+      <div class="canvas-wrap"><canvas id="chart-fb-visits"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <h3>נתוני Facebook מלאים</h3>
+    <table id="fb-table"><thead></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- INSTAGRAM TAB -->
+<div class="tab-content" data-tab="instagram">
+  <div class="section-title">Instagram — KPIs</div>
+  <div class="cards" id="ig-cards"></div>
+
+  <div class="grid">
+    <div class="chart-box">
+      <h3>Views: אורגני מול ממומן</h3>
+      <div class="canvas-wrap"><canvas id="chart-ig-organic-ads"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Reach + Accounts Reached</h3>
+      <div class="canvas-wrap"><canvas id="chart-ig-reach"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Follows vs Unfollows</h3>
+      <div class="canvas-wrap"><canvas id="chart-ig-follows"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>גידול נטו עוקבים</h3>
+      <div class="canvas-wrap"><canvas id="chart-ig-growth"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <h3>נתוני Instagram מלאים</h3>
+    <table id="ig-table"><thead></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<!-- TIKTOK TAB -->
+<div class="tab-content" data-tab="tiktok">
+  <div class="section-title">TikTok — KPIs</div>
+  <div class="cards" id="tt-cards"></div>
+
+  <div class="grid">
+    <div class="chart-box">
+      <h3>Video Views חודש מול חודש</h3>
+      <div class="canvas-wrap"><canvas id="chart-tt-views"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Likes, Comments, Shares</h3>
+      <div class="canvas-wrap"><canvas id="chart-tt-engagement"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>גידול נטו עוקבים</h3>
+      <div class="canvas-wrap"><canvas id="chart-tt-follows"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Profile Views</h3>
+      <div class="canvas-wrap"><canvas id="chart-tt-profile"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <h3>נתוני TikTok מלאים</h3>
+    <table id="tt-table"><thead></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<footer>
+  © Tom Even · גדולים במדים + פרנדוס ·
+  נבנה עם Chart.js · העדכון האחרון: <span id="footer-date"></span>
+</footer>
+
+</div>
+
+<script>
+// ============================================================
+// DATA (embedded — no fetch needed, works offline)
+// ============================================================
+const DATA = {"telemarketing": [{"month_key": "2025-12", "month_label": "דצמבר 2025", "deals": 37021, "billings": 27196, "target_pct": null, "agent_hours": 91.7, "agent_cost": 7794.5, "manager_hours": 117.7, "manager_cost": 15654.1, "commissions": 5553.15, "total_expenses": 29001.75, "campaign_revenue": 40278, "prandos_commission": 10298.64, "prandos_commission_base": 85822}, {"month_key": "2026-01", "month_label": "ינואר 2026", "deals": 169413.5, "billings": 108274.5, "target_pct": 0.996, "agent_hours": 369.74, "agent_cost": 31427.9, "manager_hours": 137.1, "manager_cost": 18234.3, "commissions": 25412, "total_expenses": 75074.2, "campaign_revenue": 3577, "prandos_commission": 13422.18, "prandos_commission_base": 111851.5}, {"month_key": "2026-02", "month_label": "פברואר 2026", "deals": 132005, "billings": 81920, "target_pct": 0.5973, "agent_hours": 480.18, "agent_cost": 40815.3, "manager_hours": 181.43, "manager_cost": 21000, "commissions": 19800, "total_expenses": 81615.3, "campaign_revenue": 17383, "prandos_commission": 11916, "prandos_commission_base": 99303}, {"month_key": "2026-03", "month_label": "מרץ 2026", "deals": 129767, "billings": 103759, "target_pct": 0.5973, "agent_hours": 345.24, "agent_cost": 29345.4, "manager_hours": 172.48, "manager_cost": 21000, "commissions": 19465.05, "total_expenses": 69810.45, "campaign_revenue": 29794, "prandos_commission": 16026.36, "prandos_commission_base": 133553}], "facebook": [{"month_key": "2025-Q4", "month_label": "Q4 2025 (אוק-דצמ)", "views": 5677906, "views_3sec": 1500000, "views_1min": 12200, "content_interactions": 186000, "visits": 28100, "new_follows": 2700, "total_followers": 24610, "views_organic": 791182, "views_ads": 4886724, "viewers": 1453247, "watch_time_days": null}, {"month_key": "2026-01", "month_label": "ינואר 2026", "views": 1681526, "views_3sec": 463800, "views_1min": 340, "content_interactions": 61000, "visits": 7700, "new_follows": 1800, "total_followers": 25202, "views_organic": 323565, "views_ads": 1357961, "viewers": 772111, "watch_time_days": 81.375}, {"month_key": "2026-02", "month_label": "פברואר 2026", "views": 1826677, "views_3sec": 409800, "views_1min": 3000, "content_interactions": 35700, "visits": 9100, "new_follows": 726, "total_followers": 26418, "views_organic": 172442, "views_ads": 1654235, "viewers": 809068, "watch_time_days": 70.29}, {"month_key": "2026-03", "month_label": "מרץ 2026", "views": 4186348, "views_3sec": 815000, "views_1min": 29200, "content_interactions": 121500, "visits": 14400, "new_follows": 6000, "total_followers": 31541, "views_organic": 835962, "views_ads": 3350386, "viewers": 1565644, "watch_time_days": 182.79}], "instagram": [{"month_key": "2025-Q4", "month_label": "Q4 2025 (אוק-דצמ)", "views": 2307404, "reach": 716900, "content_interactions": 66000, "views_organic": 218324, "views_ads": 2089080, "followers": 7029, "growth": 571, "follows": 638, "unfollows": 67, "accounts_reached": 634650}, {"month_key": "2026-01", "month_label": "ינואר 2026", "views": 636525, "reach": 276200, "content_interactions": 17900, "views_organic": 43211, "views_ads": 593314, "followers": 7091, "growth": 91, "follows": 109, "unfollows": 18, "accounts_reached": 276156}, {"month_key": "2026-02", "month_label": "פברואר 2026", "views": 803804, "reach": 423300, "content_interactions": 17000, "views_organic": 112341, "views_ads": 691463, "followers": 7419, "growth": 178, "follows": 208, "unfollows": 30, "accounts_reached": 276156}, {"month_key": "2026-03", "month_label": "מרץ 2026", "views": 1339667, "reach": 615600, "content_interactions": 34800, "views_organic": 193570, "views_ads": 1146097, "followers": 7669, "growth": 399, "follows": 454, "unfollows": 55, "accounts_reached": 615584}], "tiktok": [{"month_key": "2025-Q4", "month_label": "Q4 2025 (אוק-דצמ)", "video_views": 5500000, "profile_views": 21000, "likes": 79000, "comments": 1800, "shares": 3600, "net_follows": 3200, "total_followers": 12000}, {"month_key": "2026-01", "month_label": "ינואר 2026", "video_views": 810000, "profile_views": 3700, "likes": 11000, "comments": 288, "shares": 385, "net_follows": 235, "total_followers": 12000}, {"month_key": "2026-02", "month_label": "פברואר 2026", "video_views": 841000, "profile_views": 3900, "likes": 10000, "comments": 232, "shares": 561, "net_follows": 275, "total_followers": 12000}, {"month_key": "2026-03", "month_label": "מרץ 2026", "video_views": 1500000, "profile_views": 5300, "likes": 20000, "comments": 327, "shares": 746, "net_follows": 479, "total_followers": 13000}], "last_updated": "2026-04-19"};
+
+// ============================================================
+// CHART.JS DEFAULTS
+// ============================================================
+Chart.defaults.font.family = "'Heebo', sans-serif";
+Chart.defaults.color = '#8ea0c2';
+Chart.defaults.borderColor = '#223052';
+Chart.defaults.plugins.legend.labels.padding = 12;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.tooltip.backgroundColor = '#1b2640';
+Chart.defaults.plugins.tooltip.titleColor = '#e7ecf5';
+Chart.defaults.plugins.tooltip.bodyColor = '#e7ecf5';
+Chart.defaults.plugins.tooltip.borderColor = '#223052';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+// ============================================================
+// UTILS
+// ============================================================
+const fmt = (n) => {
+  if (n === null || n === undefined) return '–';
+  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return new Intl.NumberFormat('he-IL').format(Math.round(n * 100) / 100);
+};
+const fmtCurrency = (n) => n === null || n === undefined ? '–' : '₪' + fmt(n);
+const fmtPct = (n) => n === null || n === undefined ? '–' : (n * 100).toFixed(1) + '%';
+
+function delta(cur, prev) {
+  if (prev === null || prev === undefined || prev === 0) return { text: '', cls: 'flat' };
+  const d = (cur - prev) / prev;
+  const sign = d >= 0 ? '▲' : '▼';
+  const cls = d > 0.005 ? 'up' : d < -0.005 ? 'down' : 'flat';
+  return { text: `${sign} ${(Math.abs(d) * 100).toFixed(1)}%`, cls };
+}
+
+function card(parent, label, value, deltaObj, klass = '') {
+  const div = document.createElement('div');
+  div.className = 'card ' + klass;
+  const d = deltaObj || { text: '', cls: 'flat' };
+  div.innerHTML = `
+    <div class="label">${label}</div>
+    <div class="value">${value}</div>
+    ${d.text ? `<div class="delta ${d.cls}">${d.text} מול חודש קודם</div>` : ''}
+  `;
+  parent.appendChild(div);
+}
+
+function labels() {
+  return DATA.telemarketing.map(r => r.month_label);
+}
+function social_labels(series) {
+  return DATA[series].map(r => r.month_label);
+}
+
+const LINE_OPTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'bottom' } },
+  scales: {
+    y: { grid: { color: '#223052' }, ticks: { callback: fmt } },
+    x: { grid: { display: false } }
+  }
+};
+const BAR_OPTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'bottom' } },
+  scales: {
+    y: { grid: { color: '#223052' }, ticks: { callback: fmt } },
+    x: { grid: { display: false } }
+  }
+};
+
+// ============================================================
+// RENDER OVERVIEW
+// ============================================================
+function renderOverview() {
+  const tm = DATA.telemarketing;
+  const fb = DATA.facebook;
+  const ig = DATA.instagram;
+  const tt = DATA.tiktok;
+  const last = tm[tm.length - 1];
+  const prev = tm[tm.length - 2];
+  const fbLast = fb[fb.length - 1], fbPrev = fb[fb.length - 2];
+  const igLast = ig[ig.length - 1], igPrev = ig[ig.length - 2];
+  const ttLast = tt[tt.length - 1], ttPrev = tt[tt.length - 2];
+
+  const cards = document.getElementById('overview-cards');
+  cards.innerHTML = '';
+  card(cards, 'עיסקאות מוקד', fmtCurrency(last.deals), delta(last.deals, prev.deals), 'tm');
+  card(cards, 'סליקות מוקד', fmtCurrency(last.billings), delta(last.billings, prev.billings), 'tm');
+  card(cards, 'עמלת פרנדוס', fmtCurrency(last.prandos_commission), delta(last.prandos_commission, prev.prandos_commission), 'tm');
+  card(cards, 'FB Views', fmt(fbLast.views), delta(fbLast.views, fbPrev.views), 'fb');
+  card(cards, 'IG Views', fmt(igLast.views), delta(igLast.views, igPrev.views), 'ig');
+  card(cards, 'TT Video Views', fmt(ttLast.video_views), delta(ttLast.video_views, ttPrev.video_views), 'tt');
+
+  // TM chart
+  new Chart('chart-tm-overview', {
+    type: 'bar',
+    data: {
+      labels: labels(),
+      datasets: [
+        { label: 'עיסקאות', data: tm.map(r => r.deals), backgroundColor: 'rgba(255,184,74,0.8)', borderRadius: 6 },
+        { label: 'סליקות', data: tm.map(r => r.billings), backgroundColor: 'rgba(74,163,255,0.8)', borderRadius: 6 },
+      ]
+    },
+    options: BAR_OPTS
+  });
+
+  // Social views total
+  new Chart('chart-social-views', {
+    type: 'line',
+    data: {
+      labels: social_labels('facebook'),
+      datasets: [
+        { label: 'Facebook', data: fb.map(r => r.views), borderColor: '#1877f2', backgroundColor: 'rgba(24,119,242,0.1)', tension: 0.3, fill: true, borderWidth: 2 },
+        { label: 'Instagram', data: ig.map(r => r.views), borderColor: '#e1306c', backgroundColor: 'rgba(225,48,108,0.1)', tension: 0.3, fill: true, borderWidth: 2 },
+        { label: 'TikTok', data: tt.map(r => r.video_views), borderColor: '#25f4ee', backgroundColor: 'rgba(37,244,238,0.1)', tension: 0.3, fill: true, borderWidth: 2 },
+      ]
+    },
+    options: LINE_OPTS
+  });
+
+  // Commission
+  new Chart('chart-commission', {
+    type: 'bar',
+    data: {
+      labels: labels(),
+      datasets: [{ label: 'עמלת פרנדוס 12%', data: tm.map(r => r.prandos_commission), backgroundColor: 'rgba(61,220,151,0.8)', borderRadius: 6 }]
+    },
+    options: BAR_OPTS
+  });
+
+  // Interactions
+  new Chart('chart-interactions', {
+    type: 'bar',
+    data: {
+      labels: social_labels('facebook'),
+      datasets: [
+        { label: 'Facebook', data: fb.map(r => r.content_interactions), backgroundColor: 'rgba(24,119,242,0.85)', borderRadius: 6 },
+        { label: 'Instagram', data: ig.map(r => r.content_interactions), backgroundColor: 'rgba(225,48,108,0.85)', borderRadius: 6 },
+        { label: 'TikTok (Likes+Comments)', data: tt.map(r => (r.likes || 0) + (r.comments || 0)), backgroundColor: 'rgba(37,244,238,0.85)', borderRadius: 6 },
+      ]
+    },
+    options: BAR_OPTS
+  });
+
+  // Summary table
+  const tbody = document.querySelector('#summary-table tbody');
+  tbody.innerHTML = '';
+  for (let i = 0; i < tm.length; i++) {
+    const f = fb.find(x => x.month_key === tm[i].month_key);
+    const g = ig.find(x => x.month_key === tm[i].month_key);
+    const t = tt.find(x => x.month_key === tm[i].month_key);
+    const totalViews = (f?.views || 0) + (g?.views || 0) + (t?.video_views || 0);
+    const totalFollowers = (f?.total_followers || 0) + (g?.followers || 0) + (t?.total_followers || 0);
+    tbody.innerHTML += `<tr>
+      <td>${tm[i].month_label}</td>
+      <td class="num">${fmtCurrency(tm[i].deals)}</td>
+      <td class="num">${fmtCurrency(tm[i].billings)}</td>
+      <td class="num">${fmtCurrency(tm[i].total_expenses)}</td>
+      <td class="num">${fmtCurrency(tm[i].prandos_commission)}</td>
+      <td class="num">${fmt(totalViews)}</td>
+      <td class="num">${fmt(totalFollowers)}</td>
+    </tr>`;
+  }
+}
+
+// ============================================================
+// RENDER TELEMARKETING
+// ============================================================
+function renderTelemarketing() {
+  const tm = DATA.telemarketing;
+  const last = tm[tm.length - 1];
+  const prev = tm[tm.length - 2];
+  const cards = document.getElementById('tm-cards');
+  cards.innerHTML = '';
+  card(cards, 'עיסקאות', fmtCurrency(last.deals), delta(last.deals, prev.deals), 'tm');
+  card(cards, 'סליקות', fmtCurrency(last.billings), delta(last.billings, prev.billings), 'tm');
+  card(cards, 'יעד', fmtPct(last.target_pct), delta(last.target_pct, prev.target_pct), 'tm');
+  card(cards, 'הוצאות מוקד', fmtCurrency(last.total_expenses), delta(last.total_expenses, prev.total_expenses), 'tm');
+  card(cards, 'עמלות לנציגים', fmtCurrency(last.commissions), delta(last.commissions, prev.commissions), 'tm');
+  card(cards, 'עמלת פרנדוס', fmtCurrency(last.prandos_commission), delta(last.prandos_commission, prev.prandos_commission), 'tm');
+
+  new Chart('chart-tm-deals', {
+    type: 'bar',
+    data: {
+      labels: labels(),
+      datasets: [
+        { label: 'עיסקאות', data: tm.map(r => r.deals), backgroundColor: 'rgba(255,184,74,0.8)', borderRadius: 6 },
+        { label: 'סליקות', data: tm.map(r => r.billings), backgroundColor: 'rgba(74,163,255,0.8)', borderRadius: 6 },
+      ]
+    }, options: BAR_OPTS
+  });
+
+  new Chart('chart-tm-costs', {
+    type: 'bar',
+    data: {
+      labels: labels(),
+      datasets: [
+        { label: 'הוצאות מוקד', data: tm.map(r => r.total_expenses), backgroundColor: 'rgba(255,92,122,0.8)', borderRadius: 6 },
+        { label: 'סליקות', data: tm.map(r => r.billings), backgroundColor: 'rgba(61,220,151,0.8)', borderRadius: 6 },
+      ]
+    }, options: BAR_OPTS
+  });
+
+  new Chart('chart-tm-hours', {
+    type: 'bar',
+    data: {
+      labels: labels(),
+      datasets: [
+        { label: 'שעות נציגים', data: tm.map(r => r.agent_hours), backgroundColor: 'rgba(74,163,255,0.8)', borderRadius: 6 },
+        { label: 'שעות מנהל', data: tm.map(r => r.manager_hours), backgroundColor: 'rgba(255,184,74,0.8)', borderRadius: 6 },
+      ]
+    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' } }, x: { stacked: true, grid: { display: false } } } }
+  });
+
+  new Chart('chart-tm-commission', {
+    type: 'line',
+    data: {
+      labels: labels(),
+      datasets: [{
+        label: 'עמלת פרנדוס',
+        data: tm.map(r => r.prandos_commission),
+        borderColor: '#3ddc97',
+        backgroundColor: 'rgba(61,220,151,0.15)',
+        tension: 0.3, fill: true, pointRadius: 5, borderWidth: 3
+      }]
+    }, options: LINE_OPTS
+  });
+
+  // Table
+  const thead = document.querySelector('#tm-table thead');
+  const tbody = document.querySelector('#tm-table tbody');
+  thead.innerHTML = `<tr>
+    <th>חודש</th><th>עיסקאות</th><th>סליקות</th><th>יעד %</th>
+    <th>שעות נציגים</th><th>שעות מנהל</th><th>הוצאות מוקד</th>
+    <th>הכנסות קמפיינים</th><th>עמלת פרנדוס</th>
+  </tr>`;
+  tbody.innerHTML = tm.map(r => `<tr>
+    <td>${r.month_label}</td>
+    <td class="num">${fmtCurrency(r.deals)}</td>
+    <td class="num">${fmtCurrency(r.billings)}</td>
+    <td class="num">${fmtPct(r.target_pct)}</td>
+    <td class="num">${fmt(r.agent_hours)}</td>
+    <td class="num">${fmt(r.manager_hours)}</td>
+    <td class="num">${fmtCurrency(r.total_expenses)}</td>
+    <td class="num">${fmtCurrency(r.campaign_revenue)}</td>
+    <td class="num">${fmtCurrency(r.prandos_commission)}</td>
+  </tr>`).join('');
+}
+
+// ============================================================
+// RENDER FACEBOOK
+// ============================================================
+function renderFacebook() {
+  const fb = DATA.facebook;
+  const last = fb[fb.length - 1], prev = fb[fb.length - 2];
+  const cards = document.getElementById('fb-cards');
+  cards.innerHTML = '';
+  card(cards, 'Views', fmt(last.views), delta(last.views, prev.views), 'fb');
+  card(cards, 'Content Interactions', fmt(last.content_interactions), delta(last.content_interactions, prev.content_interactions), 'fb');
+  card(cards, 'Visits', fmt(last.visits), delta(last.visits, prev.visits), 'fb');
+  card(cards, 'עוקבים חדשים', fmt(last.new_follows), delta(last.new_follows, prev.new_follows), 'fb');
+  card(cards, 'סה"כ עוקבים', fmt(last.total_followers), delta(last.total_followers, prev.total_followers), 'fb');
+  card(cards, 'Viewers ייחודיים', fmt(last.viewers), delta(last.viewers, prev.viewers), 'fb');
+
+  new Chart('chart-fb-organic-ads', {
+    type: 'bar',
+    data: {
+      labels: social_labels('facebook'),
+      datasets: [
+        { label: 'אורגני', data: fb.map(r => r.views_organic), backgroundColor: 'rgba(61,220,151,0.8)', borderRadius: 6 },
+        { label: 'ממומן', data: fb.map(r => r.views_ads), backgroundColor: 'rgba(24,119,242,0.8)', borderRadius: 6 },
+      ]
+    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
+  });
+
+  new Chart('chart-fb-followers', {
+    type: 'line',
+    data: {
+      labels: social_labels('facebook'),
+      datasets: [
+        { label: 'סה"כ עוקבים', data: fb.map(r => r.total_followers), borderColor: '#1877f2', backgroundColor: 'rgba(24,119,242,0.15)', tension: 0.3, fill: true, borderWidth: 3, pointRadius: 5 },
+      ]
+    }, options: LINE_OPTS
+  });
+
+  new Chart('chart-fb-interactions', {
+    type: 'bar',
+    data: {
+      labels: social_labels('facebook'),
+      datasets: [{ label: 'Content Interactions', data: fb.map(r => r.content_interactions), backgroundColor: 'rgba(24,119,242,0.8)', borderRadius: 6 }]
+    }, options: BAR_OPTS
+  });
+
+  new Chart('chart-fb-visits', {
+    type: 'bar',
+    data: {
+      labels: social_labels('facebook'),
+      datasets: [{ label: 'Visits', data: fb.map(r => r.visits), backgroundColor: 'rgba(74,163,255,0.8)', borderRadius: 6 }]
+    }, options: BAR_OPTS
+  });
+
+  const thead = document.querySelector('#fb-table thead');
+  const tbody = document.querySelector('#fb-table tbody');
+  thead.innerHTML = `<tr>
+    <th>חודש</th><th>Views</th><th>Interactions</th><th>Visits</th>
+    <th>עוקבים חדשים</th><th>סה"כ עוקבים</th><th>אורגני</th><th>ממומן</th>
+  </tr>`;
+  tbody.innerHTML = fb.map(r => `<tr>
+    <td>${r.month_label}</td>
+    <td class="num">${fmt(r.views)}</td>
+    <td class="num">${fmt(r.content_interactions)}</td>
+    <td class="num">${fmt(r.visits)}</td>
+    <td class="num">${fmt(r.new_follows)}</td>
+    <td class="num">${fmt(r.total_followers)}</td>
+    <td class="num">${fmt(r.views_organic)}</td>
+    <td class="num">${fmt(r.views_ads)}</td>
+  </tr>`).join('');
+}
+
+// ============================================================
+// RENDER INSTAGRAM
+// ============================================================
+function renderInstagram() {
+  const ig = DATA.instagram;
+  const last = ig[ig.length - 1], prev = ig[ig.length - 2];
+  const cards = document.getElementById('ig-cards');
+  cards.innerHTML = '';
+  card(cards, 'Views', fmt(last.views), delta(last.views, prev.views), 'ig');
+  card(cards, 'Reach', fmt(last.reach), delta(last.reach, prev.reach), 'ig');
+  card(cards, 'Content Interactions', fmt(last.content_interactions), delta(last.content_interactions, prev.content_interactions), 'ig');
+  card(cards, 'עוקבים', fmt(last.followers), delta(last.followers, prev.followers), 'ig');
+  card(cards, 'גידול נטו', fmt(last.growth), delta(last.growth, prev.growth), 'ig');
+  card(cards, 'Accounts Reached', fmt(last.accounts_reached), delta(last.accounts_reached, prev.accounts_reached), 'ig');
+
+  new Chart('chart-ig-organic-ads', {
+    type: 'bar',
+    data: {
+      labels: social_labels('instagram'),
+      datasets: [
+        { label: 'אורגני', data: ig.map(r => r.views_organic), backgroundColor: 'rgba(61,220,151,0.8)', borderRadius: 6 },
+        { label: 'ממומן', data: ig.map(r => r.views_ads), backgroundColor: 'rgba(225,48,108,0.8)', borderRadius: 6 },
+      ]
+    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
+  });
+
+  new Chart('chart-ig-reach', {
+    type: 'bar',
+    data: {
+      labels: social_labels('instagram'),
+      datasets: [
+        { label: 'Reach', data: ig.map(r => r.reach), backgroundColor: 'rgba(225,48,108,0.8)', borderRadius: 6 },
+        { label: 'Accounts Reached', data: ig.map(r => r.accounts_reached), backgroundColor: 'rgba(74,163,255,0.6)', borderRadius: 6 },
+      ]
+    }, options: BAR_OPTS
+  });
+
+  new Chart('chart-ig-follows', {
+    type: 'bar',
+    data: {
+      labels: social_labels('instagram'),
+      datasets: [
+        { label: 'Follows', data: ig.map(r => r.follows), backgroundColor: 'rgba(61,220,151,0.8)', borderRadius: 6 },
+        { label: 'Unfollows', data: ig.map(r => r.unfollows), backgroundColor: 'rgba(255,92,122,0.8)', borderRadius: 6 },
+      ]
+    }, options: BAR_OPTS
+  });
+
+  new Chart('chart-ig-growth', {
+    type: 'line',
+    data: {
+      labels: social_labels('instagram'),
+      datasets: [{ label: 'גידול נטו', data: ig.map(r => r.growth), borderColor: '#e1306c', backgroundColor: 'rgba(225,48,108,0.15)', tension: 0.3, fill: true, borderWidth: 3, pointRadius: 5 }]
+    }, options: LINE_OPTS
+  });
+
+  const thead = document.querySelector('#ig-table thead');
+  const tbody = document.querySelector('#ig-table tbody');
+  thead.innerHTML = `<tr>
+    <th>חודש</th><th>Views</th><th>Reach</th><th>Interactions</th>
+    <th>עוקבים</th><th>Follows</th><th>Unfollows</th><th>אורגני</th><th>ממומן</th>
+  </tr>`;
+  tbody.innerHTML = ig.map(r => `<tr>
+    <td>${r.month_label}</td>
+    <td class="num">${fmt(r.views)}</td>
+    <td class="num">${fmt(r.reach)}</td>
+    <td class="num">${fmt(r.content_interactions)}</td>
+    <td class="num">${fmt(r.followers)}</td>
+    <td class="num">${fmt(r.follows)}</td>
+    <td class="num">${fmt(r.unfollows)}</td>
+    <td class="num">${fmt(r.views_organic)}</td>
+    <td class="num">${fmt(r.views_ads)}</td>
+  </tr>`).join('');
+}
+
+// ============================================================
+// RENDER TIKTOK
+// ============================================================
+function renderTiktok() {
+  const tt = DATA.tiktok;
+  const last = tt[tt.length - 1], prev = tt[tt.length - 2];
+  const cards = document.getElementById('tt-cards');
+  cards.innerHTML = '';
+  card(cards, 'Video Views', fmt(last.video_views), delta(last.video_views, prev.video_views), 'tt');
+  card(cards, 'Profile Views', fmt(last.profile_views), delta(last.profile_views, prev.profile_views), 'tt');
+  card(cards, 'Likes', fmt(last.likes), delta(last.likes, prev.likes), 'tt');
+  card(cards, 'Shares', fmt(last.shares), delta(last.shares, prev.shares), 'tt');
+  card(cards, 'גידול נטו', fmt(last.net_follows), delta(last.net_follows, prev.net_follows), 'tt');
+  card(cards, 'סה"כ עוקבים', fmt(last.total_followers), delta(last.total_followers, prev.total_followers), 'tt');
+
+  new Chart('chart-tt-views', {
+    type: 'line',
+    data: {
+      labels: social_labels('tiktok'),
+      datasets: [{ label: 'Video Views', data: tt.map(r => r.video_views), borderColor: '#25f4ee', backgroundColor: 'rgba(37,244,238,0.15)', tension: 0.3, fill: true, borderWidth: 3, pointRadius: 5 }]
+    }, options: LINE_OPTS
+  });
+
+  new Chart('chart-tt-engagement', {
+    type: 'bar',
+    data: {
+      labels: social_labels('tiktok'),
+      datasets: [
+        { label: 'Likes', data: tt.map(r => r.likes), backgroundColor: 'rgba(37,244,238,0.85)', borderRadius: 6 },
+        { label: 'Comments', data: tt.map(r => r.comments), backgroundColor: 'rgba(255,184,74,0.85)', borderRadius: 6 },
+        { label: 'Shares', data: tt.map(r => r.shares), backgroundColor: 'rgba(225,48,108,0.85)', borderRadius: 6 },
+      ]
+    }, options: BAR_OPTS
+  });
+
+  new Chart('chart-tt-follows', {
+    type: 'bar',
+    data: {
+      labels: social_labels('tiktok'),
+      datasets: [{ label: 'גידול נטו', data: tt.map(r => r.net_follows), backgroundColor: 'rgba(37,244,238,0.8)', borderRadius: 6 }]
+    }, options: BAR_OPTS
+  });
+
+  new Chart('chart-tt-profile', {
+    type: 'bar',
+    data: {
+      labels: social_labels('tiktok'),
+      datasets: [{ label: 'Profile Views', data: tt.map(r => r.profile_views), backgroundColor: 'rgba(74,163,255,0.8)', borderRadius: 6 }]
+    }, options: BAR_OPTS
+  });
+
+  const thead = document.querySelector('#tt-table thead');
+  const tbody = document.querySelector('#tt-table tbody');
+  thead.innerHTML = `<tr>
+    <th>חודש</th><th>Video Views</th><th>Profile Views</th><th>Likes</th>
+    <th>Comments</th><th>Shares</th><th>גידול נטו</th><th>סה"כ עוקבים</th>
+  </tr>`;
+  tbody.innerHTML = tt.map(r => `<tr>
+    <td>${r.month_label}</td>
+    <td class="num">${fmt(r.video_views)}</td>
+    <td class="num">${fmt(r.profile_views)}</td>
+    <td class="num">${fmt(r.likes)}</td>
+    <td class="num">${fmt(r.comments)}</td>
+    <td class="num">${fmt(r.shares)}</td>
+    <td class="num">${fmt(r.net_follows)}</td>
+    <td class="num">${fmt(r.total_followers)}</td>
+  </tr>`).join('');
+}
+
+// ============================================================
+// TABS
+// ============================================================
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.dataset.tab === target));
+  });
+});
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('updated').textContent = 'עדכון אחרון: ' + DATA.last_updated;
+document.getElementById('footer-date').textContent = DATA.last_updated;
+renderOverview();
+renderTelemarketing();
+renderFacebook();
+renderInstagram();
+renderTiktok();
+</script>
+
+</body>
+</html>
