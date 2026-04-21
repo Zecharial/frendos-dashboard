@@ -24,7 +24,7 @@ telemarketing = [
         "agent_hours": 91.7, "agent_cost": 7794.5,
         "manager_hours": 117.7, "manager_cost": 15654.1,
         "commissions": 5553.15, "total_expenses": 29001.75,
-        "campaign_revenue": 40278,
+        "campaign_revenue": 38626,  # Hanukkah 35378 + Gdolim variants (1332+180+1556+180), excluding Kaplan one-time
         "prandos_commission": 10298.64,
         "prandos_commission_base": 85822,
         "pay_peach_current": 26284, "pay_peach_recurring": 26284,
