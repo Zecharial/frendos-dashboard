@@ -24,7 +24,30 @@
     --ig: #e1306c;
     --tt: #25f4ee;
     --tm: #ffb84a;
+    --chart-grid: #223052;
+    --chart-text: #8ea0c2;
+    --tooltip-bg: #1b2640;
   }
+  [data-theme="light"] {
+    --bg: #f1f4f9;
+    --panel: #ffffff;
+    --panel-2: #eef2f7;
+    --border: #d8dfe9;
+    --text: #1a2236;
+    --muted: #5a6a86;
+    --accent: #2563eb;
+    --good: #059669;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --fb: #1877f2;
+    --ig: #c13584;
+    --tt: #0891b2;
+    --tm: #d97706;
+    --chart-grid: #e2e8f0;
+    --chart-text: #5a6a86;
+    --tooltip-bg: #ffffff;
+  }
+  body { transition: background 0.25s ease, color 0.25s ease; }
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -269,6 +292,25 @@
   }
   .chip.mini:hover { background: var(--border); }
 
+  /* Theme toggle */
+  .theme-toggle {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: inherit;
+    transition: transform .2s, background .2s;
+    color: var(--text);
+  }
+  .theme-toggle:hover { transform: scale(1.08); background: var(--panel-2); }
+
   /* Wizard button */
   .wizard-btn {
     background: transparent;
@@ -399,6 +441,9 @@
       </button>
     </div>
     <span class="updated" id="updated"></span>
+    <button class="theme-toggle" id="theme-toggle" title="החלף מצב תצוגה" aria-label="החלף מצב כהה/בהיר">
+      <span id="theme-icon">☀️</span>
+    </button>
     <button class="wizard-btn" id="wizard-btn" title="הקוסם מנבא את העתיד — לחץ לדאשבורד של עוד 5 שנים">🧙‍♂️</button>
   </div>
 </header>
@@ -643,20 +688,30 @@
 // ============================================================
 const DATA = {"telemarketing": [{"month_key": "2025-12", "month_label": "דצמבר 2025", "deals": 37021, "billings": 27196, "target_pct": 0.8776, "target_deals_pct": null, "target_billings_pct": null, "agent_hours": 91.7, "agent_cost": 7794.5, "manager_hours": 117.7, "manager_cost": 15654.1, "commissions": 5553.15, "total_expenses": 29001.75, "campaign_revenue": 38626, "prandos_commission": 10298.64, "prandos_commission_base": 85822, "pay_peach_current": 26284, "pay_peach_recurring": 26284, "pay_cardcom": 50, "pay_paybox": 612, "pay_bank": 250, "pay_jgive": 0}, {"month_key": "2026-01", "month_label": "ינואר 2026", "deals": 169413, "billings": 112603, "target_pct": 0.996, "target_deals_pct": 1.0912, "target_billings_pct": 8.7032, "agent_hours": 369.74, "agent_cost": 31427.9, "manager_hours": 137.1, "manager_cost": 18234.3, "commissions": 25412, "total_expenses": 75074.2, "campaign_revenue": 3577, "prandos_commission": 13422.18, "prandos_commission_base": 111851.5, "pay_peach_current": 82721, "pay_peach_recurring": 87050, "pay_cardcom": 1576, "pay_paybox": 12900, "pay_bank": 11077, "pay_jgive": 0}, {"month_key": "2026-02", "month_label": "פברואר 2026", "deals": 132005, "billings": 93182, "target_pct": 0.5963, "target_deals_pct": 0.85027, "target_billings_pct": 3.6012, "agent_hours": 480.18, "agent_cost": 40815.3, "manager_hours": 181.43, "manager_cost": 21000, "commissions": 19800, "total_expenses": 81615.3, "campaign_revenue": 17383, "prandos_commission": 11916, "prandos_commission_base": 99303, "pay_peach_current": 80487, "pay_peach_recurring": 83403, "pay_cardcom": 3054, "pay_paybox": 3855, "pay_bank": 2870, "pay_jgive": 0}, {"month_key": "2026-03", "month_label": "מרץ 2026", "deals": 129767, "billings": 121541, "target_pct": 0.8171, "target_deals_pct": 0.8358, "target_billings_pct": 3.1314, "agent_hours": 345.24, "agent_cost": 29345.4, "manager_hours": 172.48, "manager_cost": 21000, "commissions": 19465.05, "total_expenses": 69810.45, "campaign_revenue": 29794, "prandos_commission": 16026.36, "prandos_commission_base": 133553, "pay_peach_current": 81137, "pay_peach_recurring": 98919, "pay_cardcom": 9474, "pay_paybox": 6238, "pay_bank": 6160, "pay_jgive": 750}], "facebook": [{"month_key": "2025-Q4", "month_label": "Q4 2025 (אוק-דצמ)", "views": 5677906, "views_3sec": 1500000, "views_1min": 12200, "content_interactions": 186000, "visits": 28100, "new_follows": 2700, "total_followers": 24610, "views_organic": 791182, "views_ads": 4886724, "viewers": 1453247, "watch_time_days": null}, {"month_key": "2026-01", "month_label": "ינואר 2026", "views": 1681526, "views_3sec": 463800, "views_1min": 340, "content_interactions": 61000, "visits": 7700, "new_follows": 1800, "total_followers": 25202, "views_organic": 323565, "views_ads": 1357961, "viewers": 772111, "watch_time_days": 81.375}, {"month_key": "2026-02", "month_label": "פברואר 2026", "views": 1826677, "views_3sec": 409800, "views_1min": 3000, "content_interactions": 35700, "visits": 9100, "new_follows": 726, "total_followers": 26418, "views_organic": 172442, "views_ads": 1654235, "viewers": 809068, "watch_time_days": 70.29}, {"month_key": "2026-03", "month_label": "מרץ 2026", "views": 4186348, "views_3sec": 815000, "views_1min": 29200, "content_interactions": 121500, "visits": 14400, "new_follows": 6000, "total_followers": 31541, "views_organic": 835962, "views_ads": 3350386, "viewers": 1565644, "watch_time_days": 182.79}], "instagram": [{"month_key": "2025-Q4", "month_label": "Q4 2025 (אוק-דצמ)", "views": 2307404, "reach": 716900, "content_interactions": 66000, "views_organic": 218324, "views_ads": 2089080, "followers": 7029, "growth": 571, "follows": 638, "unfollows": 67, "accounts_reached": 634650}, {"month_key": "2026-01", "month_label": "ינואר 2026", "views": 636525, "reach": 276200, "content_interactions": 17900, "views_organic": 43211, "views_ads": 593314, "followers": 7091, "growth": 91, "follows": 109, "unfollows": 18, "accounts_reached": 276156}, {"month_key": "2026-02", "month_label": "פברואר 2026", "views": 803804, "reach": 423300, "content_interactions": 17000, "views_organic": 112341, "views_ads": 691463, "followers": 7419, "growth": 178, "follows": 208, "unfollows": 30, "accounts_reached": 276156}, {"month_key": "2026-03", "month_label": "מרץ 2026", "views": 1339667, "reach": 615600, "content_interactions": 34800, "views_organic": 193570, "views_ads": 1146097, "followers": 7669, "growth": 399, "follows": 454, "unfollows": 55, "accounts_reached": 615584}], "tiktok": [{"month_key": "2025-Q4", "month_label": "Q4 2025 (אוק-דצמ)", "video_views": 5500000, "profile_views": 21000, "likes": 79000, "comments": 1800, "shares": 3600, "net_follows": 3200, "total_followers": 12000}, {"month_key": "2026-01", "month_label": "ינואר 2026", "video_views": 810000, "profile_views": 3700, "likes": 11000, "comments": 288, "shares": 385, "net_follows": 235, "total_followers": 12000}, {"month_key": "2026-02", "month_label": "פברואר 2026", "video_views": 841000, "profile_views": 3900, "likes": 10000, "comments": 232, "shares": 561, "net_follows": 275, "total_followers": 12000}, {"month_key": "2026-03", "month_label": "מרץ 2026", "video_views": 1500000, "profile_views": 5300, "likes": 20000, "comments": 327, "shares": 746, "net_follows": 479, "total_followers": 13000}], "cumulative": {"total_deals_since_opening": 468206, "total_billings_since_opening": 354522, "soldiers_adopted": 56}, "last_updated": "2026-04-20"};
 // ============================================================
-// CHART.JS DEFAULTS
+// CHART.JS DEFAULTS (theme-aware)
 // ============================================================
 Chart.defaults.font.family = "'Heebo', sans-serif";
-Chart.defaults.color = '#8ea0c2';
-Chart.defaults.borderColor = '#223052';
 Chart.defaults.plugins.legend.labels.padding = 12;
 Chart.defaults.plugins.legend.labels.boxWidth = 12;
-Chart.defaults.plugins.tooltip.backgroundColor = '#1b2640';
-Chart.defaults.plugins.tooltip.titleColor = '#e7ecf5';
-Chart.defaults.plugins.tooltip.bodyColor = '#e7ecf5';
-Chart.defaults.plugins.tooltip.borderColor = '#223052';
 Chart.defaults.plugins.tooltip.borderWidth = 1;
 Chart.defaults.plugins.tooltip.padding = 10;
 Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+function applyChartTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  const text = cs.getPropertyValue('--chart-text').trim();
+  const grid = cs.getPropertyValue('--chart-grid').trim();
+  const tooltipBg = cs.getPropertyValue('--tooltip-bg').trim();
+  const textColor = cs.getPropertyValue('--text').trim();
+  const border = cs.getPropertyValue('--border').trim();
+  Chart.defaults.color = text;
+  Chart.defaults.borderColor = grid;
+  Chart.defaults.plugins.tooltip.backgroundColor = tooltipBg;
+  Chart.defaults.plugins.tooltip.titleColor = textColor;
+  Chart.defaults.plugins.tooltip.bodyColor = textColor;
+  Chart.defaults.plugins.tooltip.borderColor = border;
+}
+applyChartTheme();
 
 // ============================================================
 // STATE — which months are selected (Set of month_keys)
@@ -718,7 +773,7 @@ const LINE_OPTS = {
   maintainAspectRatio: false,
   plugins: { legend: { position: 'bottom' } },
   scales: {
-    y: { grid: { color: '#223052' }, ticks: { callback: fmt } },
+    y: { grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() }, ticks: { callback: fmt } },
     x: { grid: { display: false } }
   }
 };
@@ -727,7 +782,7 @@ const BAR_OPTS = {
   maintainAspectRatio: false,
   plugins: { legend: { position: 'bottom' } },
   scales: {
-    y: { grid: { color: '#223052' }, ticks: { callback: fmt } },
+    y: { grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() }, ticks: { callback: fmt } },
     x: { grid: { display: false } }
   }
 };
@@ -917,7 +972,7 @@ function renderTelemarketing() {
         { label: 'שעות נציגים', data: tm.map(r => r.agent_hours), backgroundColor: 'rgba(74,163,255,0.8)', borderRadius: 6 },
         { label: 'שעות מנהל', data: tm.map(r => r.manager_hours), backgroundColor: 'rgba(255,184,74,0.8)', borderRadius: 6 },
       ]
-    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' } }, x: { stacked: true, grid: { display: false } } } }
+    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() } }, x: { stacked: true, grid: { display: false } } } }
   });
 
   getChart('chart-tm-commission', {
@@ -982,7 +1037,7 @@ function renderFacebook() {
         { label: 'אורגני', data: fb.map(r => r.views_organic), backgroundColor: 'rgba(61,220,151,0.8)', borderRadius: 6 },
         { label: 'ממומן', data: fb.map(r => r.views_ads), backgroundColor: 'rgba(24,119,242,0.8)', borderRadius: 6 },
       ]
-    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
+    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
   });
 
   getChart('chart-fb-followers', {
@@ -1056,7 +1111,7 @@ function renderInstagram() {
         { label: 'אורגני', data: ig.map(r => r.views_organic), backgroundColor: 'rgba(61,220,151,0.8)', borderRadius: 6 },
         { label: 'ממומן', data: ig.map(r => r.views_ads), backgroundColor: 'rgba(225,48,108,0.8)', borderRadius: 6 },
       ]
-    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: '#223052' }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
+    }, options: { ...BAR_OPTS, scales: { y: { stacked: true, grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() }, ticks: { callback: fmt } }, x: { stacked: true, grid: { display: false } } } }
   });
 
   getChart('chart-ig-reach', {
@@ -1178,6 +1233,33 @@ function renderTiktok() {
     <td class="num">${fmt(r.net_follows)}</td>
     <td class="num">${fmt(r.total_followers)}</td>
   </tr>`).join('');
+}
+
+// ============================================================
+// THEME TOGGLE
+// ============================================================
+function setTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('theme-icon').textContent = '🌙';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('theme-icon').textContent = '☀️';
+  }
+  localStorage.setItem('dashboard-theme', theme);
+  applyChartTheme();
+  // Re-render all charts so grid/tooltip colors match the new theme
+  if (typeof renderAll === 'function') renderAll();
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  setTheme(current === 'light' ? 'dark' : 'light');
+});
+const savedTheme = localStorage.getItem('dashboard-theme');
+if (savedTheme === 'light') {
+  document.documentElement.setAttribute('data-theme', 'light');
+  document.getElementById('theme-icon').textContent = '🌙';
+  applyChartTheme();
 }
 
 // ============================================================
