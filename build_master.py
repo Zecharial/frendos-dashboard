@@ -24,7 +24,7 @@ telemarketing = [
         "agent_hours": 91.7, "agent_cost": 7794.5,
         "manager_hours": 117.7, "manager_cost": 15654.1,
         "commissions": 5553.15, "total_expenses": 29001.75,
-        "campaign_revenue": 38626,  # Hanukkah 35378 + Gdolim variants (1332+180+1556+180), excluding Kaplan one-time
+        "campaign_revenue": None,  # Tracked separately in `campaigns` array — see below
         "prandos_commission": 10298.64,
         "prandos_commission_base": 85822,
         "pay_peach_current": 26284, "pay_peach_recurring": 26284,
@@ -37,7 +37,7 @@ telemarketing = [
         "agent_hours": 369.74, "agent_cost": 31427.9,
         "manager_hours": 137.1, "manager_cost": 18234.3,
         "commissions": 25412, "total_expenses": 75074.2,
-        "campaign_revenue": 3577,
+        "campaign_revenue": None,
         "prandos_commission": 13422.18,
         "prandos_commission_base": 111851.5,
         "pay_peach_current": 82721, "pay_peach_recurring": 87050,
@@ -50,7 +50,7 @@ telemarketing = [
         "agent_hours": 480.18, "agent_cost": 40815.3,
         "manager_hours": 181.43, "manager_cost": 21000,
         "commissions": 19800, "total_expenses": 81615.3,
-        "campaign_revenue": 17383,
+        "campaign_revenue": None,
         "prandos_commission": 11916,
         "prandos_commission_base": 99303,
         "pay_peach_current": 80487, "pay_peach_recurring": 83403,
@@ -63,7 +63,7 @@ telemarketing = [
         "agent_hours": 345.24, "agent_cost": 29345.4,
         "manager_hours": 172.48, "manager_cost": 21000,
         "commissions": 19465.05, "total_expenses": 69810.45,
-        "campaign_revenue": 29794,
+        "campaign_revenue": None,
         "prandos_commission": 16026.36,
         "prandos_commission_base": 133553,
         "pay_peach_current": 81137, "pay_peach_recurring": 98919,
@@ -75,8 +75,21 @@ telemarketing = [
 cumulative = {
     "total_deals_since_opening": 468206,
     "total_billings_since_opening": 354522,
-    "soldiers_adopted": 56,
 }
+
+# Campaigns — separate income stream, totals since opening per campaign.
+# status: "ended" = past campaign with fixed total | "monthly" = ongoing monthly social campaign
+campaigns = [
+    {"name": "גדולים במדים 2025", "revenue": 81278, "status": "ended", "category": "social"},
+    {"name": "גדולים במדים 2025 (SMS)", "revenue": 22117, "status": "ended", "category": "sms"},
+    {"name": "גדולים במדים 2025 - שגרירים", "revenue": 2753, "status": "ended", "category": "ambassadors"},
+    {"name": "חגי תשרי תשפ\"ו", "revenue": 20584, "status": "ended", "category": "social"},
+    {"name": "חגי תשרי תשפ\"ו (SMS)", "revenue": 14170, "status": "ended", "category": "sms"},
+    {"name": "חנוכה תשפ\"ו", "revenue": 28176, "status": "ended", "category": "social"},
+    {"name": "נחמיה קפלן", "revenue": 20000, "status": "ended", "category": "donation"},
+    {"name": "פברואר 2026 — רשתות", "revenue": 7585, "status": "monthly", "category": "social", "month_key": "2026-02"},
+    {"name": "מרץ 2026 — רשתות", "revenue": 12411, "status": "monthly", "category": "social", "month_key": "2026-03"},
+]
 
 # Social: Facebook, Instagram, TikTok
 social_facebook = [
@@ -233,7 +246,7 @@ for i, tm in enumerate(telemarketing):
     fb = next((s for s in social_facebook if s["month_key"] == tm["month_key"]), None)
     ig = next((s for s in social_instagram if s["month_key"] == tm["month_key"]), None)
     tt = next((s for s in social_tiktok if s["month_key"] == tm["month_key"]), None)
-    net_profit = (tm["billings"] + tm["campaign_revenue"]) - tm["total_expenses"] - tm["prandos_commission"]
+    net_profit = tm["billings"] - tm["total_expenses"] - tm["prandos_commission"]
     fb_v = fb["views"] if fb else 0
     ig_v = ig["views"] if ig else 0
     tt_v = tt["video_views"] if tt else 0
@@ -293,6 +306,7 @@ data_for_js = {
     "facebook": social_facebook,
     "instagram": social_instagram,
     "tiktok": social_tiktok,
+    "campaigns": campaigns,
     "cumulative": cumulative,
     "last_updated": "2026-04-20",
 }
