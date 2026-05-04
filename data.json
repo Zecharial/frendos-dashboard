@@ -108,15 +108,15 @@
       "target_pct": 0.7501,
       "target_deals_pct": 0.52016,
       "target_billings_pct": 1.2455,
-      "agent_hours": null,
-      "agent_cost": null,
-      "manager_hours": null,
-      "manager_cost": null,
-      "commissions": null,
-      "total_expenses": null,
+      "agent_hours": 234.02,
+      "agent_cost": 19891.7,
+      "manager_hours": 123.1,
+      "manager_cost": 16372.3,
+      "commissions": 12113.4,
+      "total_expenses": 48377.4,
       "campaign_revenue": null,
-      "prandos_commission": null,
-      "prandos_commission_base": null,
+      "prandos_commission": 10762.92,
+      "prandos_commission_base": 89691,
       "pay_peach_current": 41507,
       "pay_peach_recurring": 61564,
       "pay_cardcom": 9284,
@@ -348,6 +348,13 @@
       "status": "monthly",
       "category": "social",
       "month_key": "2026-03"
+    },
+    {
+      "name": "אפריל 2026 — רשתות",
+      "revenue": 4333,
+      "status": "monthly",
+      "category": "social",
+      "month_key": "2026-04"
     }
   ],
   "cumulative": {

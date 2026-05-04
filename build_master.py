@@ -73,13 +73,12 @@ telemarketing = [
         "month_key": "2026-04", "month_label": "אפריל 2026",
         "deals": 80756, "billings": 64458,
         "target_pct": 0.7501, "target_deals_pct": 0.52016, "target_billings_pct": 1.2455,
-        # The fields below are pending — to be filled when the user sends the data
-        "agent_hours": None, "agent_cost": None,
-        "manager_hours": None, "manager_cost": None,
-        "commissions": None, "total_expenses": None,
+        "agent_hours": 234.02, "agent_cost": 19891.7,
+        "manager_hours": 123.1, "manager_cost": 16372.3,
+        "commissions": 12113.4, "total_expenses": 48377.4,
         "campaign_revenue": None,
-        "prandos_commission": None,
-        "prandos_commission_base": None,
+        "prandos_commission": 10762.92,
+        "prandos_commission_base": 89691,  # 64458 (current) + 20057 (recurring) + 843 (past campaigns) + 4333 (new campaigns)
         "pay_peach_current": 41507, "pay_peach_recurring": 61564,
         "pay_cardcom": 9284, "pay_paybox": 4527, "pay_bank": 3010, "pay_jgive": 5000, "pay_paypal": 1130,
     },
@@ -103,6 +102,7 @@ campaigns = [
     {"name": "נחמיה קפלן", "revenue": 20000, "status": "ended", "category": "donation"},
     {"name": "פברואר 2026 — רשתות", "revenue": 7585, "status": "monthly", "category": "social", "month_key": "2026-02"},
     {"name": "מרץ 2026 — רשתות", "revenue": 12411, "status": "monthly", "category": "social", "month_key": "2026-03"},
+    {"name": "אפריל 2026 — רשתות", "revenue": 4333, "status": "monthly", "category": "social", "month_key": "2026-04"},
 ]
 
 # Social: Facebook, Instagram, TikTok
