@@ -28,7 +28,7 @@ telemarketing = [
         "prandos_commission": 10298.64,
         "prandos_commission_base": 85822,
         "pay_peach_current": 26284, "pay_peach_recurring": 26284,
-        "pay_cardcom": 50, "pay_paybox": 612, "pay_bank": 250, "pay_jgive": 0,
+        "pay_cardcom": 50, "pay_paybox": 612, "pay_bank": 250, "pay_jgive": 0, "pay_paypal": 0,
     },
     {
         "month_key": "2026-01", "month_label": "ינואר 2026",
@@ -41,7 +41,7 @@ telemarketing = [
         "prandos_commission": 13422.18,
         "prandos_commission_base": 111851.5,
         "pay_peach_current": 82721, "pay_peach_recurring": 87050,
-        "pay_cardcom": 1576, "pay_paybox": 12900, "pay_bank": 11077, "pay_jgive": 0,
+        "pay_cardcom": 1576, "pay_paybox": 12900, "pay_bank": 11077, "pay_jgive": 0, "pay_paypal": 0,
     },
     {
         "month_key": "2026-02", "month_label": "פברואר 2026",
@@ -54,7 +54,7 @@ telemarketing = [
         "prandos_commission": 11916,
         "prandos_commission_base": 99303,
         "pay_peach_current": 80487, "pay_peach_recurring": 83403,
-        "pay_cardcom": 3054, "pay_paybox": 3855, "pay_bank": 2870, "pay_jgive": 0,
+        "pay_cardcom": 3054, "pay_paybox": 3855, "pay_bank": 2870, "pay_jgive": 0, "pay_paypal": 0,
     },
     {
         "month_key": "2026-03", "month_label": "מרץ 2026",
@@ -67,7 +67,21 @@ telemarketing = [
         "prandos_commission": 16026.36,
         "prandos_commission_base": 133553,
         "pay_peach_current": 81137, "pay_peach_recurring": 98919,
-        "pay_cardcom": 9474, "pay_paybox": 6238, "pay_bank": 6160, "pay_jgive": 750,
+        "pay_cardcom": 9474, "pay_paybox": 6238, "pay_bank": 6160, "pay_jgive": 750, "pay_paypal": 0,
+    },
+    {
+        "month_key": "2026-04", "month_label": "אפריל 2026",
+        "deals": 80756, "billings": 64458,
+        "target_pct": 0.7501, "target_deals_pct": 0.52016, "target_billings_pct": 1.2455,
+        # The fields below are pending — to be filled when the user sends the data
+        "agent_hours": None, "agent_cost": None,
+        "manager_hours": None, "manager_cost": None,
+        "commissions": None, "total_expenses": None,
+        "campaign_revenue": None,
+        "prandos_commission": None,
+        "prandos_commission_base": None,
+        "pay_peach_current": 41507, "pay_peach_recurring": 61564,
+        "pay_cardcom": 9284, "pay_paybox": 4527, "pay_bank": 3010, "pay_jgive": 5000, "pay_paypal": 1130,
     },
 ]
 
@@ -246,7 +260,7 @@ for i, tm in enumerate(telemarketing):
     fb = next((s for s in social_facebook if s["month_key"] == tm["month_key"]), None)
     ig = next((s for s in social_instagram if s["month_key"] == tm["month_key"]), None)
     tt = next((s for s in social_tiktok if s["month_key"] == tm["month_key"]), None)
-    net_profit = tm["billings"] - tm["total_expenses"] - tm["prandos_commission"]
+    net_profit = tm["billings"] - (tm["total_expenses"] or 0) - (tm["prandos_commission"] or 0)
     fb_v = fb["views"] if fb else 0
     ig_v = ig["views"] if ig else 0
     tt_v = tt["video_views"] if tt else 0
@@ -308,7 +322,7 @@ data_for_js = {
     "tiktok": social_tiktok,
     "campaigns": campaigns,
     "cumulative": cumulative,
-    "last_updated": "2026-04-20",
+    "last_updated": "2026-05-04",
 }
 (OUT_DIR / "data.json").write_text(json.dumps(data_for_js, ensure_ascii=False, indent=2), encoding="utf-8")
 

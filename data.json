@@ -22,7 +22,8 @@
       "pay_cardcom": 50,
       "pay_paybox": 612,
       "pay_bank": 250,
-      "pay_jgive": 0
+      "pay_jgive": 0,
+      "pay_paypal": 0
     },
     {
       "month_key": "2026-01",
@@ -46,7 +47,8 @@
       "pay_cardcom": 1576,
       "pay_paybox": 12900,
       "pay_bank": 11077,
-      "pay_jgive": 0
+      "pay_jgive": 0,
+      "pay_paypal": 0
     },
     {
       "month_key": "2026-02",
@@ -70,7 +72,8 @@
       "pay_cardcom": 3054,
       "pay_paybox": 3855,
       "pay_bank": 2870,
-      "pay_jgive": 0
+      "pay_jgive": 0,
+      "pay_paypal": 0
     },
     {
       "month_key": "2026-03",
@@ -94,7 +97,33 @@
       "pay_cardcom": 9474,
       "pay_paybox": 6238,
       "pay_bank": 6160,
-      "pay_jgive": 750
+      "pay_jgive": 750,
+      "pay_paypal": 0
+    },
+    {
+      "month_key": "2026-04",
+      "month_label": "אפריל 2026",
+      "deals": 80756,
+      "billings": 64458,
+      "target_pct": 0.7501,
+      "target_deals_pct": 0.52016,
+      "target_billings_pct": 1.2455,
+      "agent_hours": null,
+      "agent_cost": null,
+      "manager_hours": null,
+      "manager_cost": null,
+      "commissions": null,
+      "total_expenses": null,
+      "campaign_revenue": null,
+      "prandos_commission": null,
+      "prandos_commission_base": null,
+      "pay_peach_current": 41507,
+      "pay_peach_recurring": 61564,
+      "pay_cardcom": 9284,
+      "pay_paybox": 4527,
+      "pay_bank": 3010,
+      "pay_jgive": 5000,
+      "pay_paypal": 1130
     }
   ],
   "facebook": [
@@ -325,5 +354,5 @@
     "total_deals_since_opening": 468206,
     "total_billings_since_opening": 354522
   },
-  "last_updated": "2026-04-20"
+  "last_updated": "2026-05-04"
 }
