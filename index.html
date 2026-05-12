@@ -973,22 +973,20 @@ function renderTelemarketing() {
   const totalDeals = sum(tm, 'deals');
   const totalBillings = sum(tm, 'billings');
   const totalExpenses = sum(tm, 'total_expenses');
-  const totalCommissions = sum(tm, 'commissions');
   const totalPrandos = sum(tm, 'prandos_commission');
-  const totalAgentHours = sum(tm, 'agent_hours');
-  const totalManagerHours = sum(tm, 'manager_hours');
+  const totalCostWithPrandos = totalExpenses + totalPrandos;
+  const totalProfitBillings = totalBillings - totalCostWithPrandos;
+  const totalProfitDeals = totalDeals - totalCostWithPrandos;
   // Average target %, skipping months without a target
   const targetRows = tm.filter(r => r.target_pct !== null && r.target_pct !== undefined);
   const avgTarget = targetRows.length ? targetRows.reduce((a, r) => a + r.target_pct, 0) / targetRows.length : null;
 
   card(cards, `סה"כ עיסקאות (${tm.length} חודשים)`, fmtCurrency(totalDeals), null, 'tm');
   card(cards, 'סה"כ סליקות', fmtCurrency(totalBillings), null, 'tm');
+  card(cards, 'עלות מוקד + עמלת פרנדוס', fmtCurrency(totalCostWithPrandos), null, 'tm');
+  card(cards, 'רווח עמותה — מסליקות', fmtCurrency(totalProfitBillings), null, 'profit');
+  card(cards, 'רווח עמותה — מעסקאות', fmtCurrency(totalProfitDeals), null, 'profit');
   card(cards, 'ממוצע יעד', fmtPct(avgTarget), null, 'tm');
-  card(cards, 'סה"כ הוצאות מוקד', fmtCurrency(totalExpenses), null, 'tm');
-  card(cards, 'סה"כ עמלות לנציגים', fmtCurrency(totalCommissions), null, 'tm');
-  card(cards, 'סה"כ עמלות פרנדוס', fmtCurrency(totalPrandos), null, 'tm');
-  card(cards, 'סה"כ שעות נציגים', fmt(totalAgentHours), null, 'tm');
-  card(cards, 'סה"כ שעות מנהל', fmt(totalManagerHours), null, 'tm');
 
   getChart('chart-tm-deals', {
     type: 'bar',
